@@ -1,6 +1,6 @@
 ﻿import { SafeAreaView } from "@/components/ui/SafeAreaView";
 import { useSignIn } from "@clerk/expo";
-import { Link, useRouter } from "expo-router";
+import { type Href, Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -58,15 +58,29 @@ export default function SignIn() {
 
       if (signIn.status === "complete") {
         await signIn.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl("/(tabs)/");
-            router.replace(url as any);
+          navigate: ({ session, decorateUrl }) => {
+            if (session?.currentTask) {
+              console.log(session?.currentTask);
+              return;
+            }
+
+            const url = decorateUrl('/(tabs)');
+            if (url.startsWith('http')) {
+              // Only use window.location on web platform
+              if (typeof window !== 'undefined' && window.location) {
+                window.location.href = url;
+              } else {
+                // On native, just use router navigation
+                router.replace('/(tabs)' as Href);
+              }
+            } else {
+              router.replace(url as Href);
+            }
           },
         });
-      } else if (
-        signIn.status === "needs_second_factor" ||
-        signIn.status === "needs_client_trust"
-      ) {
+      } else if (signIn.status === "needs_second_factor") {
+        console.log('MFA required');
+      } else if (signIn.status === "needs_client_trust") {
         await signIn.mfa.sendEmailCode();
         setStep("verify");
       }
@@ -85,9 +99,24 @@ export default function SignIn() {
       await signIn.mfa.verifyEmailCode({ code });
       if (signIn.status === "complete") {
         await signIn.finalize({
-          navigate: ({ decorateUrl }) => {
-            const url = decorateUrl("/(tabs)/");
-            router.replace(url as any);
+          navigate: ({ session, decorateUrl }) => {
+            if (session?.currentTask) {
+              console.log(session?.currentTask);
+              return;
+            }
+
+            const url = decorateUrl('/(tabs)');
+            if (url.startsWith('http')) {
+              // Only use window.location on web platform
+              if (typeof window !== 'undefined' && window.location) {
+                window.location.href = url;
+              } else {
+                // On native, just use router navigation
+                router.replace('/(tabs)' as Href);
+              }
+            } else {
+              router.replace(url as Href);
+            }
           },
         });
       }

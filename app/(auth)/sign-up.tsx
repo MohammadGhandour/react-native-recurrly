@@ -1,7 +1,7 @@
 ﻿import { SafeAreaView } from "@/components/ui/SafeAreaView";
 import { useSignUp } from "@clerk/expo";
 import { Link, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -34,6 +34,16 @@ export default function SignUp() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [globalError, setGlobalError] = useState("");
   const [resendCooldown, setResendCooldown] = useState(false);
+  const resendTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (resendTimeoutRef.current !== null) {
+        clearTimeout(resendTimeoutRef.current);
+        resendTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const isBusy = fetchStatus === "fetching";
 
@@ -89,9 +99,13 @@ export default function SignUp() {
     try {
       await signUp.verifications.sendEmailCode();
       setResendCooldown(true);
-      setTimeout(() => setResendCooldown(false), 30000);
-    } catch {
-      // silent
+      if (resendTimeoutRef.current !== null) clearTimeout(resendTimeoutRef.current);
+      resendTimeoutRef.current = setTimeout(() => {
+        resendTimeoutRef.current = null;
+        setResendCooldown(false);
+      }, 30000);
+    } catch (err: any) {
+      setGlobalError(err?.message ?? "Failed to resend code. Please try again.");
     }
   };
 

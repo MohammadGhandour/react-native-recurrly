@@ -39,7 +39,7 @@ export default function SignIn() {
   const validateCredentials = () => {
     const errs: FieldErrors = {};
     if (!EMAIL_REGEX.test(email)) errs.email = "Enter a valid email address.";
-    if (password.length < 8) errs.password = "Password must be at least 8 characters.";
+    if (!password) errs.password = "Enter your password.";
     setFieldErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -99,8 +99,8 @@ export default function SignIn() {
   const handleResend = async () => {
     try {
       await signIn.mfa.sendEmailCode();
-    } catch {
-      // silent
+    } catch (err: any) {
+      setGlobalError(err?.message ?? "Failed to resend code. Please try again.");
     }
   };
 

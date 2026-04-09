@@ -1,6 +1,6 @@
 import { SafeAreaView } from "@/components/ui/SafeAreaView";
 import { useClerk } from "@clerk/expo";
-import { Pressable, Text } from "react-native";
+import { Alert, Pressable, Text } from "react-native";
 
 const Settings = () => {
   const { signOut } = useClerk();
@@ -10,7 +10,13 @@ const Settings = () => {
       <Text className="text-2xl font-sans-bold text-primary mb-6">Settings</Text>
       <Pressable
         className="items-center rounded-2xl bg-accent py-4"
-        onPress={() => signOut()}
+        onPress={async () => {
+          try {
+            await signOut();
+          } catch (err: any) {
+            Alert.alert("Sign out failed", err?.message ?? "Something went wrong. Please try again.");
+          }
+        }}
       >
         <Text className="text-base font-sans-bold text-primary">Sign out</Text>
       </Pressable>

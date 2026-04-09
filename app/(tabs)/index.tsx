@@ -2,24 +2,21 @@ import ListHeading from "@/components/ListHeading";
 import SubscriptionCard from "@/components/SubscriptionCard";
 import { SafeAreaView } from "@/components/ui/SafeAreaView";
 import UpcomingSubscriptionCard from "@/components/UpcomingSubscriptionCard";
-import { HOME_BALANCE, HOME_SUBSCRIPTIONS, HOME_USER, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
+import { HOME_BALANCE, HOME_SUBSCRIPTIONS, UPCOMING_SUBSCRIPTIONS } from "@/constants/data";
 import { icons } from "@/constants/icons";
 import images from "@/constants/images";
 import { formatCurrency } from "@/lib/utils";
+import { useUser } from "@clerk/expo";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { FlatList, Image, Text, View } from "react-native";
 
 
 export default function App() {
+  const { user } = useUser();
   const [expandedSubId, setExpandedSubId] = useState<string | null>(null);
 
-  const user = {
-    avatar: images.avatar,
-    username: HOME_USER.name,
-    balance: HOME_BALANCE.amount,
-    nextRenewalDate: HOME_BALANCE.nextRenewalDate,
-  };
+  const displayName = user?.firstName || user?.fullName || user?.emailAddresses[0]?.emailAddress || 'User';
 
   return (
     <SafeAreaView className="flex-1 bg-background p-5">
@@ -28,8 +25,8 @@ export default function App() {
           <>
             <View className="home-header">
               <View className="home-user">
-                <Image source={user.avatar} className="home-avatar" />
-                <Text className="home-user-name">{user.username}</Text>
+                <Image source={user?.imageUrl ? { uri: user.imageUrl } : images.avatar} className="home-avatar" />
+                <Text className="home-user-name">{displayName}</Text>
               </View>
 
               <Image source={icons.add} className="home-add-icon" />
@@ -39,8 +36,8 @@ export default function App() {
               <Text className="home-balance-label">Balance</Text>
 
               <View className="home-balance-row">
-                <Text className="home-balance-amount">{formatCurrency(user.balance)}</Text>
-                <Text className="home-balance-date">{dayjs(user.nextRenewalDate).format("MM/DD")}</Text>
+                <Text className="home-balance-amount">{formatCurrency(HOME_BALANCE.amount)}</Text>
+                <Text className="home-balance-date">{dayjs(HOME_BALANCE.nextRenewalDate).format("MM/DD")}</Text>
               </View>
             </View>
 
